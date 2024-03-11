@@ -977,20 +977,18 @@ SELECT COUNT(codigo_cliente) FROM cliente LEFT JOIN empleado ON codigo_empleado_
 /*11.Calcula la fecha del primer y último pago realizado por cada uno de los clientes. El listado deberá mostrar el nombre y los apellidos de cada cliente.*/
 SELECT nombre_cliente, apellido_contacto, MIN(fecha_pago), MAX(fecha_pago) FROM cliente, pago WHERE pago.codigo_cliente = cliente.codigo_cliente GROUP BY cliente.codigo_cliente, nombre_cliente, apellido_contacto;
 /*12.Calcula el número de productos diferentes que hay en cada uno de los pedidos.*/
-SELECT COUNT(*), codigo_pedido FROM producto, detalle_pedido WHERE producto.codigo_producto = detalle_pedido.codigo_producto GROUP BY codigo_pedido;
+SELECT COUNT(DISTINCT(producto.nombre)), codigo_pedido FROM producto, detalle_pedido WHERE producto.codigo_producto = detalle_pedido.codigo_producto GROUP BY codigo_pedido;
 /*13.Calcula la suma de la cantidad total de todos los productos que aparecen en cada uno de los pedidos.*/
 SELECT SUM(precio_venta), codigo_pedido FROM producto, detalle_pedido WHERE producto.codigo_producto = detalle_pedido.codigo_producto GROUP BY codigo_pedido;
 /*14.Devuelve un listado de los 20 productos más vendidos y el número total de unidades que se han vendido de cada uno. El listado deberá estar ordenado por el número total de unidades vendidas.*/
 SELECT COUNT(*), producto.nombre FROM producto, detalle_pedido WHERE producto.codigo_producto = detalle_pedido.codigo_producto GROUP BY producto.nombre ORDER BY COUNT(*) DESC LIMIT 20;
 /*15.La facturación que ha tenido la empresa en toda la historia, indicando la base imponible, el IVA y el total facturado. La base imponible se calcula sumando el coste del producto por el número de unidades vendidas de la tabla detalle_pedido. El IVA es el 21 % de la base imponible, y el total la suma de los dos campos anteriores.*/
-SELECT SUM(precio_proveedor * COUNT(*)) AS "Base imponible", ("Base imponible"*21)/100 AS "IVA", ("Base imponible" + "IVA") AS "Total facturado" FROM producto, detalle_pedido WHERE producto.codigo_producto = detalle_pedido.codigo_producto GROUP BY codigo_pedido;
+SELECT SUM(precio_unidad * cantidad) AS BaseImp , (SUM(precio_unidad * cantidad) * 0.21) AS IVA, (SUM(precio_unidad * cantidad) + (SUM(precio_unidad * cantidad) * 0.21)) AS Total FROM detalle_pedidoo;
 /*16.La misma información que en la pregunta anterior, pero agrupada por código de producto.*/
-
+SELECT SUM(precio_unidad * cantidad) AS BaseImp , (SUM(precio_unidad * cantidad) * 0.21) AS IVA, (SUM(precio_unidad * cantidad) + (SUM(precio_unidad * cantidad) * 0.21)) AS Total, codigo_producto FROM detalle_pedido GROUP BY codigo_producto;
 /*17.La misma información que en la pregunta anterior, pero agrupada por código de producto filtrada por los códigos que empiecen por OR.*/
+SELECT SUM(precio_unidad * cantidad) AS BaseImp , (SUM(precio_unidad * cantidad) * 0.21) AS IVA, (SUM(precio_unidad * cantidad) + (SUM(precio_unidad * cantidad) * 0.21)) AS Total, codigo_producto FROM detalle_pedido WHERE codigo_producto LIKE "OR%" GROUP BY codigo_producto;
 
-/*18.Lista las ventas totales de los productos que hayan facturado más de 3000 euros. Se mostrará el nombre, unidades vendidas, total facturado y total facturado con impuestos (21% IVA).*/
-
-/*19.Muestre la suma total de todos los pagos que se realizaron para cada uno de los años que aparecen en la tabla pagos.*/
 
 
        

@@ -135,3 +135,44 @@ SELECT cliente.id, cliente.nombre, cliente.apellido1, IFNULL(MAX(total),0) FROM 
 SELECT MAX(total), YEAR(fecha) FROM pedido GROUP BY YEAR(fecha);
 /*15.Devuelve el número total de pedidos que se han realizado cada año.*/
 SELECT COUNT(*), YEAR(fecha) FROM pedido GROUP BY YEAR(fecha);
+
+/*SUBCONSULTAS*/
+/*1. Devuelve un listado con todos los pedidos que ha realizado Adela Salas Díaz. (Sin utilizar INNER JOIN).*/
+SELECT * FROM pedido WHERE id_cliente = (SELECT id FROM cliente WHERE nombre = "Adela" AND apellido1 = "Salas" AND apellido2 = "Díaz");
+/*2. Devuelve el número de pedidos en los que ha participado el comercial Daniel Sáez Vega. (Sin utilizar INNER JOIN)*/
+SELECT COUNT(*) FROM pedido WHERE id_comercial = (SELECT id FROM comercial WHERE nombre = "Daniel" AND apellido1 = "Saéz" AND apellido2 = "Vega");
+/*3. Devuelve los datos del cliente que realizó el pedido más caro en el año 2019. (Sin utilizar INNER JOIN)*/
+SELECT * FROM cliente WHERE id = (SELECT id_cliente FROM pedido WHERE total = (SELECT MAX(total) FROM pedido WHERE YEAR(fecha) = 2019));
+/*4. Devuelve la fecha y la cantidad del pedido de menor valor realizado por el cliente Pepe Ruiz Santana.*/
+SELECT fecha, total FROM pedido WHERE id_cliente = (SELECT id FROM cliente WHERE nombre = "Pepe" AND apellido1 = "Ruiz" AND apellido2 = "Santana") ORDER BY total ASC LIMIT 1;
+/*5. Devuelve un listado con los datos de los clientes y los pedidos de todos los clientes que han realizado un pedido durante el año 2017 con un valor mayor o igual al valor medio de los pedidos realizados durante ese mismo año.*/
+SELECT * FROM cliente, pedido WHERE id_cliente = cliente.id AND YEAR(fecha) = 2017 AND total >= (SELECT AVG(total) FROM pedido WHERE YEAR(fecha) = 2017);
+/*6. Devuelve el pedido más caro que existe en la tabla pedido si hacer uso de MAX, ORDER BY ni LIMIT.*/
+SELECT * FROM pedido WHERE total >= ALL(SELECT total FROM pedido);
+/*7. Devuelve un listado de los clientes que no han realizado ningún pedido. (Utilizando ANY o ALL).*/
+SELECT * FROM cliente WHERE id != ALL(SELECT id_cliente FROM pedido);
+/*8. Devuelve un listado de los comerciales que no han realizado ningún pedido. (Utilizando ANY o ALL).*/
+SELECT * FROM comercial WHERE id != ALL(SELECT id_comercial FROM pedido);
+/*9. Devuelve un listado de los clientes que no han realizado ningún pedido. (Utilizando IN o NOT IN).*/
+SELECT * FROM cliente WHERE id NOT IN (SELECT id_cliente FROM pedido);
+/*10. Devuelve un listado de los comerciales que no han realizado ningún pedido. (Utilizando IN o NOT IN).*/
+SELECT * FROM comercial WHERE id NOT IN (SELECT id_comercial FROM pedido);
+
+/*CONSULTAS MEZCLADAS*/
+/*1.Devuelve un listado de todos los pedidos que se realizaron durante el año 2017, cuya cantidad total sea superior a 500€.*/
+SELECT * FROM pedido WHERE YEAR(fecha) = 2017 AND total > 500;
+/*2.Devuelve todos los datos de los dos pedidos de mayor valor (usa limit).*/
+SELECT * FROM pedido ORDER BY total DESC LIMIT 2;
+/*3.Devuelve un listado con el identificador, nombre y los apellidos de todos los clientes que han realizado algún pedido. El listado debe estar ordenado alfabéticamente y se deben eliminar los elementos repetidos.*/
+SELECT DISTINCT cliente.id, nombre, apellido1, apellido2 FROM cliente INNER JOIN pedido ON id_cliente = cliente.id ORDER BY nombre ASC, apellido1 ASC, apellido2 ASC;
+/*4.Devuelve el nombre de todos los clientes que han realizado algún pedido con el comercial Daniel Sáez Vega.*/
+SELECT DISTINCT cliente.nombre, cliente.apellido1, cliente.apellido2 FROM cliente, pedido, comercial WHERE id_cliente = cliente.id AND id_comercial = comercial.id AND comercial.nombre = "Daniel" AND comercial.apellido1 = "Saéz" AND comercial.apellido2 = "Vega" ;
+/*5.Devuelve el número total de pedidos que se han realizado cada año. Incluir el año en la respuesta.*/
+SELECT COUNT(*), YEAR(fecha) FROM pedido GROUP BY YEAR(fecha);
+/*6.Calcula cuál es el máximo valor de los pedidos realizados durante el mismo día para cada uno de los clientes, teniendo en cuenta que sólo queremos mostrar aquellos pedidos que superen la cantidad de 2000 €. Incluir el id_cliente y el día en la respuesta.*/
+SELECT fecha, id_cliente, MAX(total) FROM pedido WHERE total > 2000 GROUP BY fecha, id_cliente;
+/*7.Devuelve un listado de los comerciales que no han realizado ningún pedido. (Utilizando IN o NOT IN).*/
+SELECT * FROM comercial WHERE id NOT IN (SELECT id_comercial FROM pedido WHERE id_comercial IS NOT NULL);
+/*8.Devuelve un listado con los datos de los clientes y los pedidos, de todos los clientes que han realizado un pedido durante el año 2017 con un valor mayor o igual al valor medio de los pedidos realizados durante ese mismo año.*/
+SELECT * FROM cliente, pedido WHERE id_cliente = cliente.id AND YEAR(fecha) = 2017 AND total >= (SELECT AVG(total) FROM pedido WHERE YEAR(fecha) = 2017);
+
