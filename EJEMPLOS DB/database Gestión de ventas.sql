@@ -67,6 +67,7 @@ INSERT INTO pedido VALUES(15, 370.85, '2019-03-11', 1, 5);
 INSERT INTO pedido VALUES(16, 2389.23, '2019-03-11', 1, 5);
 
 /*CONSULTAS BÁSICAS*/
+
 /* 1.Devuelve un listado con todos los pedidos que se han realizado. Los pedidos deben estar ordenados por la fecha de realización, mostrando en primer lugar los pedidos más recientes.*/
 SELECT * FROM pedido ORDER BY fecha DESC;
 /* 2.Devuelve todos los datos de los dos pedidos de mayor valor.*/
@@ -89,6 +90,7 @@ SELECT nombre FROM cliente WHERE NOT nombre LIKE 'A%' ORDER BY nombre ASC;
 SELECT DISTINCT nombre FROM comercial WHERE nombre LIKE '%el' OR nombre LIKE '%o';
 
 /*CONSULTAS MULTITABLA (INTERNA)*/
+
 /*1.Devuelve un listado con el identificador, nombre y los apellidos de todos los clientes que han realizado algún pedido. El listado debe estar ordenado alfabéticamente y se deben eliminar los elementos repetidos.*/
 SELECT DISTINCT cliente.id, cliente.nombre, cliente.apellido1, cliente.apellido2 FROM cliente INNER JOIN pedido ON id_cliente = cliente.id;
 /*2.Devuelve un listado que muestre todos los pedidos que ha realizado cada cliente. El resultado debe mostrar todos los datos de los pedidos y del cliente. El listado debe mostrar los datos de los clientes ordenados alfabéticamente.*/
@@ -105,6 +107,7 @@ SELECT DISTINCT comercial.nombre, comercial.apellido1, comercial.apellido2 FROM 
 SELECT DISTINCT cliente.nombre FROM pedido INNER JOIN cliente ON id_cliente = cliente.id INNER JOIN comercial ON comercial.id = id_comercial WHERE comercial.nombre = 'Daniel' AND comercial.apellido1 = 'Sáez' AND comercial.apellido2 = 'Vega';
 
 /*CONSULTAS RESUMEN*/
+
 /*1.Calcula la cantidad total que suman todos los pedidos que aparecen en la tabla pedido.*/
 SELECT SUM(total) FROM pedido;
 /*2.Calcula la cantidad media de todos los pedidos que aparecen en la tabla pedido.*/
@@ -137,6 +140,7 @@ SELECT MAX(total), YEAR(fecha) FROM pedido GROUP BY YEAR(fecha);
 SELECT COUNT(*), YEAR(fecha) FROM pedido GROUP BY YEAR(fecha);
 
 /*SUBCONSULTAS*/
+
 /*1. Devuelve un listado con todos los pedidos que ha realizado Adela Salas Díaz. (Sin utilizar INNER JOIN).*/
 SELECT * FROM pedido WHERE id_cliente = (SELECT id FROM cliente WHERE nombre = "Adela" AND apellido1 = "Salas" AND apellido2 = "Díaz");
 /*2. Devuelve el número de pedidos en los que ha participado el comercial Daniel Sáez Vega. (Sin utilizar INNER JOIN)*/
@@ -159,6 +163,7 @@ SELECT * FROM cliente WHERE id NOT IN (SELECT id_cliente FROM pedido);
 SELECT * FROM comercial WHERE id NOT IN (SELECT id_comercial FROM pedido);
 
 /*CONSULTAS MEZCLADAS*/
+
 /*1.Devuelve un listado de todos los pedidos que se realizaron durante el año 2017, cuya cantidad total sea superior a 500€.*/
 SELECT * FROM pedido WHERE YEAR(fecha) = 2017 AND total > 500;
 /*2.Devuelve todos los datos de los dos pedidos de mayor valor (usa limit).*/
@@ -176,3 +181,17 @@ SELECT * FROM comercial WHERE id NOT IN (SELECT id_comercial FROM pedido WHERE i
 /*8.Devuelve un listado con los datos de los clientes y los pedidos, de todos los clientes que han realizado un pedido durante el año 2017 con un valor mayor o igual al valor medio de los pedidos realizados durante ese mismo año.*/
 SELECT * FROM cliente, pedido WHERE id_cliente = cliente.id AND YEAR(fecha) = 2017 AND total >= (SELECT AVG(total) FROM pedido WHERE YEAR(fecha) = 2017);
 
+/*CORRELACIONADAS*/
+
+/*1.Lista el nombre y apellidos de cada cliente con el/los id's de pedidos, total y fecha de los pedidos más caros (total mayor) para ese cliente.*/
+SELECT cliente.nombre, cliente.apellido1, cliente.apellido2, P1.id, total, fecha FROM cliente INNER JOIN pedido P1 ON id_cliente = cliente.id WHERE total = (SELECT MAX(total) FROM pedido P2 WHERE P2.id_cliente = P1.id_cliente);
+/*2.Lista el nombre y apellidos de cada cliente con el/los id's de pedidos, total y fecha de los pedidos con total superior a la media para ese cliente.*/
+SELECT  cliente.nombre, cliente.apellido1, cliente.apellido2, P1.id, total, fecha FROM cliente INNER JOIN pedido P1 ON id_cliente = cliente.id WHERE total > (SELECT AVG(total) FROM pedido P2 WHERE P2.id_cliente = P1.id_cliente);
+/*3.Lista el nombre y apellidos de comercial con el/los id's de pedidos, total y fecha de los pedidos más caros (total mayor) para ese comercial.*/
+SELECT comercial.nombre, comercial.apellido1, comercial.apellido2, P1.id, total, fecha FROM comercial INNER JOIN pedido P1 ON P1.id_comercial = comercial.id WHERE total = (SELECT MAX(total) FROM pedido P2 WHERE P1.id_comercial = P2.id_comercial);
+/*4.Lista el nombre y apellidos de comercial con el/los id's de pedidos, cantidad y fecha de los pedidos con cantidad superior a la media para ese comercial.*/
+SELECT comercial.nombre, comercial.apellido1, comercial.apellido2, P1.id, total, fecha FROM comercial INNER JOIN pedido P1 ON P1.id_comercial = comercial.id WHERE total > (SELECT AVG(total) FROM pedido P2 WHERE P1.id_comercial = P2.id_comercial);
+/*5.Lista todos los campos de los comerciales junto con los campos de pedidos de los pedidos que sean los más baratos (total menor) para ese comercial, pero de los comerciales que tengan una comisión superior a la media de comisiones de todos los comerciales.*/
+SELECT comercial.*, P1.* FROM comercial INNER JOIN pedido P1 ON P1.id_comercial = comercial.id WHERE total = (SELECT MIN(total) FROM pedido P2 WHERE P2.id_comercial = P1.id_comercial) AND comisión > (SELECT AVG(comisión) FROM comercial);
+/*6.Lista todos los campos de los comerciales junto con los campos de pedidos de los pedidos que sean los más caros (total mayor) para ese comercial, pero de los comerciales que tengan una comisión inferior a la media de comisiones de todos los comerciales.*/
+SELECT comercial.*, P1.* FROM comercial INNER JOIN pedido P1 ON P1.id_comercial = comercial.id WHERE total = (SELECT MAX(total) FROM pedido P2 WHERE P2.id_comercial = P1.id_comercial) AND comisión < (SELECT AVG(comisión) FROM comercial);

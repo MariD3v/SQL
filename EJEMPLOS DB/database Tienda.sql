@@ -38,6 +38,7 @@ INSERT INTO producto VALUES(10, 'Impresora HP Deskjet 3720', 59.99, 3);
 INSERT INTO producto VALUES(11, 'Impresora HP Laserjet Pro M26nw', 180, 3);
 
 /*CONSULTAS BÁSICAS*/
+
 /*1.Lista el nombre de todos los productos que hay en la tabla producto.*/
 SELECT nombre FROM producto;
 /*2.Lista los nombres y los precios de todos los productos de la tabla producto.*/
@@ -110,6 +111,7 @@ SELECT nombre FROM producto WHERE nombre LIKE '%Monitor%' AND precio < 215;
 SELECT nombre, precio FROM producto WHERE precio >= 180 ORDER BY precio DESC, nombre ASC;
 
 /*CONSULTAS MULTITABLA (INTERNA)*/
+
 /*1.Devuelve una lista con el nombre del producto, precio y nombre de fabricante de todos los productos de la base de datos.*/
 SELECT producto.nombre, precio, fabricante.nombre FROM producto, fabricante WHERE producto.id_fabricante = fabricante.id; /*SELECT producto.nombre, precio, fabricante.nombre FROM producto INNER JOIN fabricante ON producto.id_fabricante = fabricante.id;*/
 /*2.Devuelve una lista con el nombre del producto, precio y nombre de fabricante de todos los productos de la base de datos. Ordene el resultado por el nombre del fabricante, por orden alfabético.*/
@@ -138,6 +140,7 @@ SELECT producto.nombre, precio, fabricante.nombre FROM producto INNER JOIN fabri
 SELECT DISTINCT id_fabricante, fabricante.nombre FROM producto INNER JOIN fabricante ON id_fabricante = fabricante.id;
 
 /*CONSULTAS RESUMEN*/
+
 /*1.Calcula el número total de productos que hay en la tabla productos.*/
 SELECT COUNT(*) FROM producto;
 /*2.Calcula el número total de fabricantes que hay en la tabla fabricante.*/
@@ -223,3 +226,14 @@ SELECT nombre FROM fabricante WHERE id NOT IN (SELECT id_fabricante FROM product
 SELECT nombre FROM fabricante WHERE EXISTS (SELECT id_fabricante FROM producto WHERE id_fabricante = fabricante.id);
 /*14.Devuelve los nombres de los fabricantes que no tienen productos asociados. (Utilizando EXISTS o NOT EXISTS).*/
 SELECT nombre FROM fabricante WHERE NOT EXISTS (SELECT id_fabricante FROM producto WHERE id_fabricante = fabricante.id);
+
+/*CORRELACIONADAS*/
+
+/*1.Lista el nombre de cada fabricante con el nombre y el precio de su producto más caro.*/
+SELECT fabricante.nombre, P1.nombre, precio FROM fabricante INNER JOIN producto P1 ON fabricante.id = P1.id_fabricante WHERE precio = (SELECT MAX(precio) FROM producto P2 WHERE P2.id_fabricante = P1.id_fabricante);
+/*2.Devuelve un listado de todos los productos que tienen un precio mayor o igual a la media de todos los productos de su mismo fabricante.*/
+SELECT * FROM producto P1 WHERE precio >= (SELECT AVG(precio) FROM producto P2 WHERE P1.id_fabricante = P2.id_fabricante);
+/*3.Lista los nombres de fabricante, nombres de producto y precio de los productos más baratos de cada fabricante.*/
+SELECT fabricante.nombre, P1.nombre, precio FROM fabricante INNER JOIN producto P1 ON fabricante.id = P1.id_fabricante WHERE precio = (SELECT MIN(precio) FROM producto P2 WHERE P1.id_fabricante = P2.id_fabricante);
+/*4.Listar los nombres de fabricante, nombres de producto y precio de los productos que estén entre el precio medio para ese fabricante y el precio máximo para ese fabricante.*/
+SELECT fabricante.nombre, P1.nombre, precio FROM fabricante INNER JOIN producto P1 ON fabricante.id = P1.id_fabricante WHERE precio BETWEEN (SELECT AVG(precio) FROM producto P2 WHERE P1.id_fabricante = P2.id_fabricante) AND ((SELECT MAX(precio) FROM producto P3 WHERE P1.id_fabricante = P3.id_fabricante));

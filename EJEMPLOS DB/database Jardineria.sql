@@ -929,6 +929,7 @@ INSERT INTO pago VALUES (35,'PayPal','ak-std-000025','2007-10-06',3321);
 INSERT INTO pago VALUES (38,'PayPal','ak-std-000026','2006-05-26',1171);
 
 /*CONSULTAS MULTITABLA (INTERNA)*/
+
 /*1. Obtén un listado con el nombre de cada cliente y el nombre y apellido de su representante de ventas.*/
 SELECT nombre_cliente, empleado.nombre, empleado.apellido1, empleado.apellido2 FROM cliente, empleado WHERE codigo_empleado_rep_ventas = codigo_empleado;      
 /*2. Muestra el nombre de los clientes que hayan realizado pagos junto con el nombre de sus representantes de ventas.*/
@@ -954,6 +955,7 @@ SELECT nombre_cliente FROM cliente INNER JOIN pedido ON cliente.codigo_cliente =
 SELECT DISTINCT nombre_cliente, gama FROM cliente, producto, pedido, detalle_pedido WHERE cliente.codigo_cliente = pedido.codigo_cliente AND pedido.codigo_pedido = detalle_pedido.codigo_pedido AND producto.codigo_producto = producto.codigo_producto;
 
 /*CONSULTAS RESUMEN*/
+
 /*1.¿Cuántos empleados hay en la compañía?*/
 SELECT COUNT(*) FROM empleado;
 /*2.¿Cuántos clientes tiene cada país?*/
@@ -989,6 +991,14 @@ SELECT SUM(precio_unidad * cantidad) AS BaseImp , (SUM(precio_unidad * cantidad)
 /*17.La misma información que en la pregunta anterior, pero agrupada por código de producto filtrada por los códigos que empiecen por OR.*/
 SELECT SUM(precio_unidad * cantidad) AS BaseImp , (SUM(precio_unidad * cantidad) * 0.21) AS IVA, (SUM(precio_unidad * cantidad) + (SUM(precio_unidad * cantidad) * 0.21)) AS Total, codigo_producto FROM detalle_pedido WHERE codigo_producto LIKE "OR%" GROUP BY codigo_producto;
 
+/*CORRELACIONADAS*/
+
+/*1.Lista el nombre y apellido de contacto de cada cliente con el/los códigos de pedido, y fecha de pedido para el/los pedidos más recientes para ese cliente.*/
+SELECT nombre_contacto, apellido_contacto, P1.codigo_pedido, fecha_pedido FROM cliente INNER JOIN pedido P1 ON cliente.codigo_cliente = P1.codigo_cliente WHERE fecha_pedido = (SELECT MAX(fecha_pedido) FROM pedido P2 WHERE P1.codigo_cliente = P2.codigo_cliente);
+/*2.Lista el nombre y apellido de contacto de cada cliente con el/los id de transacciones y el total del/los pago(s) más caro(s) para ese cliente.*/
+SELECT nombre_contacto, apellido_contacto, id_transaccion, P1.total FROM cliente INNER JOIN pago P1 ON P1.codigo_cliente = cliente.codigo_cliente WHERE P1.total = (SELECT MAX(total) FROM pago P2 WHERE P2.codigo_cliente = P1.codigo_cliente);
+/*3.Lista el código de producto, nombre, código de pedido y cantidad de los detalles de pedido de mayor cantidad para cada producto.*/
+SELECT producto.codigo_producto, producto.nombre, D1.codigo_pedido, D1.cantidad FROM producto INNER JOIN detalle_pedido D1 ON D1.codigo_producto = producto.codigo_producto WHERE cantidad = (SELECT MAX(cantidad) FROM detalle_pedido D2 WHERE D1.codigo_producto = D2.codigo_producto);
 
 
        
