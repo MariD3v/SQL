@@ -155,13 +155,13 @@ SELECT * FROM factura ORDER BY importe DESC, cod_fac ASC LIMIT 3;
 /*16.Hallar todos los datos de los artículos cuyo media de ventas para ese articulo (media del nº de unidades vendidas en cada albaran para ese artículo) suponga 40% o más del stock actual para ese artículo. Ordénalos por código de artículo.*/
 SELECT A1.cod_art, A1.descripcion, A1.precio, A1.stock FROM articulo A1 INNER JOIN albaran ON albaran.cod_art= A1.cod_art GROUP BY A1.cod_art, A1.descripcion, A1.precio, A1.stock HAVING AVG(albaran.cantidad) >= (SELECT stock*0.4 FROM articulo A2 WHERE A1.cod_art = A2.cod_art) ;
 /*17.Hallar todos los datos de albaranes de 2012 o 2014 pero que sus cantidades de articulos vendidos sea 10 o 30. Ordénalos por código de albaran. NO UTILICES BETWEEN. */
-
+SELECT * FROM albaran WHERE (YEAR(fecha_alb) = 2012 OR YEAR(fecha_alb) = 2014) AND (cantidad = 10 OR cantidad = 30) ORDER BY cod_alb;
 /*18.Hallar, para cada cliente, el dni junto con su facturación total como total_fact. */
-
+SELECT dni, SUM(importe) AS total_fact FROM factura GROUP BY dni;
 
 /*MANIPULACIÓN DE DATOS*/
 
 /*1.Actualizar todos los stocks de artículos incrementado en un 20% aquellos artículos cuyo stock esté por debajo de 10 unidades. Utiliza redondeo al alza para hallar el stock entero más próximo al cálculo realizado.*/
-
+UPDATE articulo SET stock = ROUND(stock * 1.20) WHERE stock < 10;
 /*2.Actualizar todos los precios de artículos incrementado en un 8% aquellos artículos cuyo precio sea 250 o superior. Utiliza redondeo al alza para hallar el precio entero más próximo al cálculo realizado.*/
-
+UPDATE articulo SET precio = ROUND(precio * 1.08) WHERE precio >= 250;

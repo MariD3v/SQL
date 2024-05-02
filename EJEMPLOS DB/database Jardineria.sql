@@ -1000,5 +1000,12 @@ SELECT nombre_contacto, apellido_contacto, id_transaccion, P1.total FROM cliente
 /*3.Lista el código de producto, nombre, código de pedido y cantidad de los detalles de pedido de mayor cantidad para cada producto.*/
 SELECT producto.codigo_producto, producto.nombre, D1.codigo_pedido, D1.cantidad FROM producto INNER JOIN detalle_pedido D1 ON D1.codigo_producto = producto.codigo_producto WHERE cantidad = (SELECT MAX(cantidad) FROM detalle_pedido D2 WHERE D1.codigo_producto = D2.codigo_producto);
 
+/*DIFERENCIA ENTRE GROUP BY Y CORRELACIONADA*/
+/*Obtén el codigo de cliente y la fecha del pedido más reciente para cada cliente*/
+SELECT cliente.codigo_cliente, MAX(pedido.fecha_pedido) FROM cliente INNER JOIN pedido ON cliente.codigo_cliente = pedido.codigo_cliente GROUP BY cliente.codigo_cliente ORDER BY cliente.codigo_cliente;
+/*Obtén el codigo de cliente, la fecha del pedido más reciente y el codigo del pedido para cada cliente*/
+SELECT cliente.codigo_cliente, P1.codigo_pedido, P1.fecha_pedido FROM cliente INNER JOIN pedido P1 ON cliente.codigo_cliente = P1.codigo_cliente WHERE P1.fecha_pedido = (SELECT MAX(fecha_pedido) FROM pedido P2 WHERE P2.codigo_cliente=P1.codigo_cliente) ORDER BY cliente.codigo_cliente; 
+/*Cuando nos pidan una funcion de agregación (MAX, COUNT, SUM...), un atributo de una tabla y otro atributo de otra tabla diferente hay que hacer correlacionada*/
+
 
        
