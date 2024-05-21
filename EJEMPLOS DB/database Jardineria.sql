@@ -1001,11 +1001,49 @@ SELECT nombre_contacto, apellido_contacto, id_transaccion, P1.total FROM cliente
 SELECT producto.codigo_producto, producto.nombre, D1.codigo_pedido, D1.cantidad FROM producto INNER JOIN detalle_pedido D1 ON D1.codigo_producto = producto.codigo_producto WHERE cantidad = (SELECT MAX(cantidad) FROM detalle_pedido D2 WHERE D1.codigo_producto = D2.codigo_producto);
 
 /*DIFERENCIA ENTRE GROUP BY Y CORRELACIONADA*/
+
 /*Obtén el codigo de cliente y la fecha del pedido más reciente para cada cliente*/
 SELECT cliente.codigo_cliente, MAX(pedido.fecha_pedido) FROM cliente INNER JOIN pedido ON cliente.codigo_cliente = pedido.codigo_cliente GROUP BY cliente.codigo_cliente ORDER BY cliente.codigo_cliente;
 /*Obtén el codigo de cliente, la fecha del pedido más reciente y el codigo del pedido para cada cliente*/
 SELECT cliente.codigo_cliente, P1.codigo_pedido, P1.fecha_pedido FROM cliente INNER JOIN pedido P1 ON cliente.codigo_cliente = P1.codigo_cliente WHERE P1.fecha_pedido = (SELECT MAX(fecha_pedido) FROM pedido P2 WHERE P2.codigo_cliente=P1.codigo_cliente) ORDER BY cliente.codigo_cliente; 
 /*Cuando nos pidan una funcion de agregación (MAX, COUNT, SUM...), un atributo de una tabla y otro atributo de otra tabla diferente hay que hacer correlacionada*/
 
+/*MANIPULACIÓN DE DATOS*/
 
+/*1. Modificar la definición de la tabla “ DetallePedido” para añadir un campo numérico llamado IVA.*/
+ALTER TABLE detalle_pedido ADD COLUMN IVA INT;
+/*2. Iniciar una transacción.*/
+BEGIN;
+/*3. Establecer el valor del campo IVA a 18 para aquellos registros cuyo pedido tenga fecha a partir de julio de 2008.*/
+UPDATE detalle_pedido SET IVA = 18 WHERE codigo_pedido IN (SELECT codigo_pedido FROM pedido WHERE fecha_pedido >= "2008-07-01");
+/*4. Establecer el valor del campo IVA a 16 para el resto.*/
+UPDATE detalle_pedido SET IVA = 16 WHERE codigo_pedido IN (SELECT codigo_pedido FROM pedido WHERE fecha_pedido < "2008-07-01");
+/*5. ¿Como deshacerias la transacción?*/
+ROLLBACK;
+/*6. Validar la transacción.*/
+COMMIT;
+/*7. Volver a modificar la definición de la tabla “DetallePedido” para añadir un campo numérico llamado TotalLinea.*/
+ALTER TABLE detalle_pedido ADD COLUMN total_linea INT;
+/*8. Actualizar todos los registros calculando el valor del campo “TotalLinea” con la siguiente fórmula: TotalLinea=PrecioUnidad*Cantidad*IVA/100*/
+UPDATE detalle_pedido SET total_linea = (precio_unidad*cantidad*IVA)/100;
+/*9. Crea una vista llamada V_IMP_GEN que muestre el código de pedido y el importe generado por ese pedido, de los pedidos realizados, pero solo de los pedidos de más de 4000.*/
+CREATE VIEW v_imp_gen AS SELECT codigo_pedido, SUM(precio_unidad*cantidad) AS importe FROM detalle_pedido GROUP BY codigo_pedido HAVING importe >= 4000;
+
+/*USUARIOS*/
+
+/*1. Indica como harías para asignarle permisos de select a dicha vista al usuario “user1” para que se pueda conectar desde cualquier IP.*/
+CREATE USER 'user1'@'%' IDENTIFIED BY 'user1';
+GRANT SELECT ON v_imp_gen TO 'user1'@'%';
+/*2. Crea el usuario “user2” con clave “1234” que solo se podrá conectar a la BBDD desde la máquina local.*/
+CREATE USER 'user2'@'localhost' IDENTIFIED BY '1234';
+/*3. Crea el usuario “user3” con clave “6789” que solo se podrá conectar a la BBDD desde la máquina con dirección IP:192.168.56.78*/
+CREATE USER 'user3'@'192.168.56.78' IDENTIFIED BY '6789';
+/*4. Asignar al usuario “user2” permisos para poder seleccionar, insertar, eliminar y actualizar datos sobre la tabla Empleado, con la posibilidad que pueda “propagar” dicho permiso a otros usuarios*/
+GRANT SELECT, INSERT, DELETE, UPDATE ON jardineria.empleado TO 'user2'@'localhost' WITH GRANT OPTION;
+/*5. Asignar al usuario “user3” todos los permisos posibles sobre la BBDD jardinería. */
+GRANT ALL PRIVILEGES ON jardineria.* TO 'user3'@'192.168.56.78';
+/*6. Quitar el permiso select al usuario “user2” sobre la tabla empleado.*/
+REVOKE SELECT ON jardineria.empleado FROM 'user2'@'localhost';
+/*7. Eliminar el usuario “user3” de la BBDD.*/
+DROP USER 'user3'@'192.168.56.78';
        

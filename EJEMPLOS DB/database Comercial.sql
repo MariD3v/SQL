@@ -165,3 +165,42 @@ SELECT dni, SUM(importe) AS total_fact FROM factura GROUP BY dni;
 UPDATE articulo SET stock = ROUND(stock * 1.20) WHERE stock < 10;
 /*2.Actualizar todos los precios de artículos incrementado en un 8% aquellos artículos cuyo precio sea 250 o superior. Utiliza redondeo al alza para hallar el precio entero más próximo al cálculo realizado.*/
 UPDATE articulo SET precio = ROUND(precio * 1.08) WHERE precio >= 250;
+
+/*FUNCIONES*/
+
+/*1. Crear una función para contar albaranes de un año concreto. Para ello se tiene que pasar como parámetro al albarán, el año por el que se quiere 
+consultar en un parámetro.*/
+CREATE FUNCTION `count_albaran_año` (año INT)
+RETURNS INTEGER
+DETERMINISTIC
+BEGIN
+DECLARE valor_devuelto INT;
+SELECT COUNT(*) INTO valor_devuelto FROM albaran WHERE YEAR(fecha_alb) = año;
+RETURN valor_devuelto;
+END
+/*2. Llama a la función anterior para el año 2013*/
+select comercial.count_albaran_año(2013);
+/*3. Calcular la edad en años de un determinado cliente. Para calcular los años deberemos pasar a la función un parámetro que identifique al cliente, en 
+nuestro caso el dni.*/
+CREATE FUNCTION `calculo_años`(dnicli VARCHAR(9)) 
+RETURNS INTEGER
+DETERMINISTIC
+BEGIN
+DECLARE valor_devuelto INT;
+SELECT DATEDIFF(now(), fecha_nac)/365 INTO valor_devuelto FROM cliente WHERE dni = dnicli;
+RETURN valor_devuelto;
+END
+/*4. Llama a la función anterior para el dni 33333333C*/
+select comercial.calculo_años('33333333C');
+/*5. Calcular el valor total en almacén de todas las unidades de un determinado artículo. Para ello habrá que recibir como parámetro el código del artículo y 
+tendrá que calcular el valor total en base al precio de ese artículo y del número de unidades existentes en el almacén (stock).*/
+CREATE FUNCTION `valor_unidades_art` (cod_arti VARCHAR(7))
+RETURNS INTEGER
+DETERMINISTIC
+BEGIN
+DECLARE valor_devuelto INT;
+SELECT stock * precio INTO valor_devuelto FROM articulo WHERE cod_arti = cod_art;
+RETURN valor_devuelto;
+END
+/*6. Llama a la funcion para el cod_art ART-10*/
+select comercial.valor_unidades_art('ART-10');
